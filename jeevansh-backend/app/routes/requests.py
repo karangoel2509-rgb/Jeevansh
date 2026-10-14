@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, status
+from app.services.whatsapp_service import send_donor_alert
+from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 from datetime import datetime
 from bson import ObjectId
 from app.database import get_db
@@ -8,7 +9,7 @@ from app.services.geo_search import find_nearby_donors
 router = APIRouter(prefix="/api/requests", tags=["requests"])
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_request(payload: BloodRequestCreate):
+async def create_request(payload: BloodRequestCreate, background_tasks: BackgroundTasks):
     db = get_db()
 
     # Find compatible donors near the patient
@@ -40,6 +41,16 @@ async def create_request(payload: BloodRequestCreate):
 
     result = await db.requests.insert_one(request_doc)
     request_id = str(result.inserted_id)
+
+    # --- TEMPORARY TEST: Send only to myself ---
+    background_tasks.add_task(
+        send_donor_alert,
+        donor_phone="+918218655336",  # <--- PUT YOUR REAL NUMBER HERE
+        blood_type=payload.blood_type,
+        hospital=payload.hospital_name,
+        distance=5.0
+    )
+    # -------------------------------------------
 
     # TODO Phase 3: Send WhatsApp alerts to matched donors here
 
