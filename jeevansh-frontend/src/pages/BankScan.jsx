@@ -3,13 +3,26 @@ import { Html5Qrcode } from 'html5-qrcode';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import { verifyDonation } from '../services/bankService';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function BankScan() {
+  const { bank } = useAuth();
   const [scanned, setScanned] = useState(null);
   const [scanning, setScanning] = useState(false);
+  const [manualToken, setManualToken] = useState('');
   const scannerRef = useRef(null);
   const containerRef = useRef(null);
+
+  const processToken = async (token) => {
+    try {
+      const result = await verifyDonation(token, bank?.id);
+      setScanned(result);
+      toast.success('Donation verified!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Verification failed');
+    }
+  };
 
   const startScan = async () => {
     setScanning(true);
@@ -22,9 +35,12 @@ export default function BankScan() {
         async (decodedText) => {
           await scanner.stop();
           setScanning(false);
-          const result = await verifyDonation(decodedText);
-          setScanned(result);
-          toast.success('Donation verified!');
+          // If QR contains a URL like http://localhost:3000/verify/TOKEN, extract token
+          let token = decodedText;
+          if (decodedText.includes('/verify/')) {
+            token = decodedText.split('/verify/')[1];
+          }
+          await processToken(token);
         },
         () => {}
       );
@@ -34,10 +50,19 @@ export default function BankScan() {
     }
   };
 
+  const handleManualVerify = async () => {
+    if (!manualToken.trim()) return toast.error('Please paste a token');
+    await processToken(manualToken.trim());
+  };
+
+  // For demo: simulate by grabbing a token from the URL if provided
   const simulateScan = async () => {
-    const result = await verifyDonation('SIMULATED_TOKEN');
-    setScanned(result);
-    toast.success('Donation verified!');
+    // Try to get the last created token from localStorage (we'll set it from status screen)
+    const lastToken = localStorage.getItem('last_donation_token');
+    if (!lastToken) {
+      return toast.error('No recent token. Use the Status page to simulate first.');
+    }
+    await processToken(lastToken);
   };
 
   useEffect(() => () => { scannerRef.current?.stop().catch(() => {}); }, []);
@@ -45,25 +70,41 @@ export default function BankScan() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Scan QR Code</h1>
-        <p className="text-gray-500 mt-1">Scan the donor's QR code to verify their donation.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Verify Donation</h1>
+        <p className="text-gray-500 mt-1">Scan the donor's QR code or paste the token.</p>
       </div>
 
       {!scanned && (
-        <Card>
-          <div id="qr-reader" ref={containerRef} className="w-full rounded-xl overflow-hidden mb-4" />
-          {!scanning && (
-            <div className="space-y-3">
-              <Button size="lg" onClick={startScan}>📷 Start Camera Scan</Button>
-              <Button variant="secondary" size="lg" onClick={simulateScan}>
-                ⚡ Simulate Scan (Demo Mode)
-              </Button>
-            </div>
-          )}
-          {scanning && (
-            <p className="text-center text-sm text-gray-500 animate-pulse">Scanning... point camera at QR code</p>
-          )}
-        </Card>
+        <>
+          <Card>
+            <div id="qr-reader" ref={containerRef} className="w-full rounded-xl overflow-hidden mb-4" />
+            {!scanning && (
+              <div className="space-y-3">
+                <Button size="lg" onClick={startScan}>📷 Start Camera Scan</Button>
+                <Button variant="secondary" size="lg" onClick={simulateScan}>
+                  ⚡ Simulate Scan (Demo)
+                </Button>
+              </div>
+            )}
+            {scanning && (
+              <p className="text-center text-sm text-gray-500 animate-pulse">Scanning...</p>
+            )}
+          </Card>
+
+          <Card>
+            <h3 className="font-bold mb-3">Manual Token Entry</h3>
+            <textarea
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blood-500/20 focus:border-blood-500 outline-none font-mono text-xs"
+              rows="4"
+              placeholder="Paste the token here..."
+              value={manualToken}
+              onChange={(e) => setManualToken(e.target.value)}
+            />
+            <Button className="mt-3 w-full" onClick={handleManualVerify}>
+              Verify Token
+            </Button>
+          </Card>
+        </>
       )}
 
       {scanned && (
@@ -75,11 +116,12 @@ export default function BankScan() {
             <h3 className="text-2xl font-bold text-emerald-800 mb-4">Donation Verified</h3>
             <div className="bg-white rounded-xl p-4 mb-6 text-left">
               <div className="grid grid-cols-2 gap-4">
-                <div><p className="text-xs text-gray-500">Donor</p><p className="font-semibold">{scanned.donorName}</p></div>
-                <div><p className="text-xs text-gray-500">Blood Type</p><p className="font-semibold">{scanned.bloodType}</p></div>
-                <div><p className="text-xs text-gray-500">Request ID</p><p className="font-semibold">{scanned.requestId}</p></div>
+                <div><p className="text-xs text-gray-500">Donor</p><p className="font-semibold">{scanned.donor_name}</p></div>
+                <div><p className="text-xs text-gray-500">Blood Type</p><p className="font-semibold">{scanned.blood_type}</p></div>
+                <div><p className="text-xs text-gray-500">Request ID</p><p className="font-semibold text-xs">{scanned.request_id?.slice(-6)}</p></div>
                 <div><p className="text-xs text-gray-500">Time</p><p className="font-semibold">{new Date().toLocaleTimeString()}</p></div>
               </div>
+              <p className="text-sm text-emerald-700 mt-4 italic">{scanned.message}</p>
             </div>
             <Button onClick={() => setScanned(null)}>Scan Next Donor</Button>
           </div>

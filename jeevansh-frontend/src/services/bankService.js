@@ -1,11 +1,27 @@
-const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+import axios from 'axios';
 
-export async function loginBank(bankId) {
-  await delay(500);
-  return { token: 'bank-token-' + Date.now(), bank: { id: bankId, name: 'City Hospital Blood Bank' } };
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
+export async function loginBank(bankId, password) {
+  const res = await axios.post(`${API_URL}/banks/login`, {
+    bank_id: bankId,
+    password: password,
+  });
+  return res.data; // { success, token, bank: {id, name} }
 }
 
-export async function verifyDonation(token) {
-  await delay(700);
-  return { success: true, donorName: 'Donor 42', bloodType: 'B+', requestId: 'REQ-123456' };
+export async function verifyDonation(token, bankId = null) {
+  const res = await axios.post(`${API_URL}/donations/verify`, {
+    token: token,
+    bank_id: bankId,
+  });
+  return res.data; // { success, message, donor_name, blood_type, ... }
+}
+
+export async function getDonationHistory(bankId) {
+  const url = bankId
+    ? `${API_URL}/donations/history?bank_id=${bankId}`
+    : `${API_URL}/donations/history`;
+  const res = await axios.get(url);
+  return res.data;
 }
