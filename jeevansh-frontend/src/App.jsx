@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RequestProvider } from './context/RequestContext';
+import ScrollToTop from './components/ScrollToTop';
 
 import RequesterLayout from './components/layout/RequesterLayout';
 import DonorLayout from './components/layout/DonorLayout';
@@ -35,6 +36,7 @@ export default function App() {
     <AuthProvider>
       <RequestProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <Toaster position="top-center" toastOptions={{
             style: { background: '#333', color: '#fff', borderRadius: '12px' }
           }} />

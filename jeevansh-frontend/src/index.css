@@ -16,15 +16,115 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ─── Fade in up ─── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
 }
-
 .animate-delay-100 { animation-delay: 0.1s; }
 .animate-delay-200 { animation-delay: 0.2s; }
 .animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+/* ─── Fade in (no movement) ─── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 1s ease-out forwards;
+  opacity: 0;
+}
+
+/* ─── Float ─── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* ─── Pulse glow (for CTA buttons) ─── */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4), 0 10px 25px -5px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0), 0 10px 25px -5px rgba(220, 38, 38, 0.5);
+  }
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* ─── Gradient shift (background) ─── */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* ─── Shimmer (for stat cards) ─── */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* ─── Scale on hover (generic) ─── */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Reveal on scroll (used by useInView) ─── */
+.reveal-base {
+  transition-property: opacity, transform;
+  transition-duration: 800ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-hidden-up    { opacity: 0; transform: translateY(40px); }
+.reveal-hidden-down  { opacity: 0; transform: translateY(-40px); }
+.reveal-hidden-left  { opacity: 0; transform: translateX(-40px); }
+.reveal-hidden-right { opacity: 0; transform: translateX(40px); }
+.reveal-hidden-zoom  { opacity: 0; transform: scale(0.92); }
+
+.reveal-visible      { opacity: 1; transform: none; }
+
+/* ─── Nav underline animation ─── */
+.nav-underline {
+  position: relative;
+}
+.nav-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, #dc2626, #b91c1c);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+.nav-underline:hover::after,
+.nav-underline.active::after {
+  width: 100%;
+}
