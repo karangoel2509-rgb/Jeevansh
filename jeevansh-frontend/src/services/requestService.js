@@ -39,11 +39,8 @@ export async function getRequestStatus(requestId) {
   return res.data;
 }
 
-// NEW: Simulate a donor accepting the request (demo only)
-export async function simulateAccept(requestId, donorPhone = null) {
-  const url = donorPhone
-    ? `${API_URL}/requests/${requestId}/simulate-accept?donor_phone=${encodeURIComponent(donorPhone)}`
-    : `${API_URL}/requests/${requestId}/simulate-accept`;
-  const res = await axios.post(url);
+// NEW: Get only donor contact info for the patient
+export async function getDonorInfoForPatient(requestId) {
+  const res = await axios.get(`${API_URL}/requests/${requestId}/donor-info`);
   return res.data;
 }

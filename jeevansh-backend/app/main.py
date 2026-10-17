@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.database import connect_db, close_db
-from app.routes import donors, requests, donations
+from app.routes import donors, requests, donations, webhook
 
 
 @asynccontextmanager
@@ -22,7 +22,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tighten in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,6 +31,8 @@ app.add_middleware(
 app.include_router(donors.router)
 app.include_router(requests.router)
 app.include_router(donations.router)
+app.include_router(webhook.router)
+
 
 @app.get("/")
 async def root():

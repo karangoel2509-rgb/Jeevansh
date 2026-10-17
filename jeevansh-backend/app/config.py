@@ -12,3 +12,5 @@ TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 
 JWT_SECRET = os.getenv("JWT_SECRET", "jeevansh-hackathon-secret")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+
+WHATSAPP_ENABLED = os.getenv("WHATSAPP_ENABLED", "false").lower() == "true"

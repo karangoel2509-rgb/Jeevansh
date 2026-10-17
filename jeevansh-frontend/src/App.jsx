@@ -8,6 +8,7 @@ import RequesterLayout from './components/layout/RequesterLayout';
 import DonorLayout from './components/layout/DonorLayout';
 import BankLayout from './components/layout/BankLayout';
 
+import DonorCertificate from './pages/DonorCertificate';
 import VerifyScreen from './pages/VerifyScreen';
 import Home from './pages/Home';
 import RequestForm from './pages/RequestForm';
@@ -57,6 +58,7 @@ export default function App() {
             {/* Protected Donor Routes */}
             <Route element={<DonorRoute><DonorLayout /></DonorRoute>}>
               <Route path="/donor/dashboard" element={<DonorDashboard />} />
+              <Route path="/donor/certificate/:certId" element={<DonorCertificate />} /> {/* <-- NEW */}
             </Route>
 
             {/* Protected Bank Routes */}

@@ -1,288 +1,172 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getDonorDashboard } from '../services/donorService';
+import { getDonorDashboard, getPendingRequests, acceptRequest, getCertificates } from '../services/donorService';
 import {
   HeartIcon,
-  UsersIcon,
   AlertIcon,
   CheckCircleIcon,
+  LocationIcon,
   ShieldIcon,
-  SparkleIcon,
-  ClipboardIcon,
-  SendIcon,
-  ArrowRightIcon,
 } from '../components/common/Icons';
+import toast from 'react-hot-toast';
 
 export default function DonorDashboard() {
   const { donor } = useAuth();
-  const [data, setData] = useState(null);
-  const [available, setAvailable] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [pending, setPending] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [activeQr, setActiveQr] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    if (!donor?.id) return;
+    try {
+      const [s, p, c] = await Promise.all([
+        getDonorDashboard(donor.id),
+        getPendingRequests(donor.id),
+        getCertificates(donor.id)
+      ]);
+      setStats(s);
+      setPending(p);
+      setCertificates(c);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    getDonorDashboard(donor?.id).then((d) => {
-      setData(d);
-      setAvailable(d.available ?? true);
-    });
+    loadData();
   }, [donor]);
 
-  if (!data) {
-    return (
-      <div className="text-center py-20">
-        <div className="w-12 h-12 border-4 border-blood-200 border-t-blood-600 rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-gray-500 font-medium">Loading your dashboard...</p>
-      </div>
-    );
-  }
+  const handleAccept = async (requestId) => {
+    try {
+      const res = await acceptRequest(donor.id, requestId);
+      setActiveQr(res); // Show the QR code
+      setPending(pending.filter(p => p.id !== requestId)); // Remove from pending list
+      localStorage.setItem('last_donation_token', res.token);
+      toast.success('You have accepted the request!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to accept');
+    }
+  };
 
-  const nextMilestone = [1, 3, 5, 10].find((n) => n > data.totalDonations) || 10;
-  const progress = Math.min((data.totalDonations / nextMilestone) * 100, 100);
+  if (loading || !stats) return <div className="text-center py-20 animate-pulse text-gray-500">Loading dashboard...</div>;
 
   return (
     <div className="space-y-6">
-      {/* ═══════════════ WELCOME HERO ═══════════════ */}
+      
+      {/* 1. WELCOME HERO */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blood-600 via-blood-700 to-blood-800 text-white p-6 md:p-8 animate-fade-in-up">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 -left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-0 -right-10 w-72 h-72 bg-red-400/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
-        </div>
-
         <div className="relative flex items-center justify-between flex-wrap gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-3">
-              <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-              Active Donor
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black mb-1">
-              Welcome back, {donor?.name} 👋
-            </h1>
-            <p className="text-red-100 text-sm md:text-base">
-              Here's your impact and what's coming next.
-            </p>
+            <h1 className="text-2xl md:text-3xl font-black mb-1">Welcome back, {donor?.name} 👋</h1>
+            <p className="text-red-100 text-sm">Here is your impact and active requests.</p>
           </div>
-
-          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-4 py-3">
-            <div className="text-right">
-              <p className="text-xs text-red-100 font-medium">Availability</p>
-              <p className="text-sm font-bold">{available ? 'Available' : 'Paused'}</p>
+          <div className="flex gap-4">
+            <div className="bg-white/10 rounded-2xl px-5 py-3 text-center">
+              <p className="text-2xl font-black">{stats.totalDonations}</p>
+              <p className="text-xs text-red-100 font-medium">Donations</p>
             </div>
-            <button
-              onClick={() => setAvailable(!available)}
-              className={`relative w-14 h-8 rounded-full transition-colors ${
-                available ? 'bg-emerald-500' : 'bg-gray-400'
-              }`}
-            >
-              <span
-                className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
-                  available ? 'left-7' : 'left-1'
-                }`}
-              />
-            </button>
+            <div className="bg-white/10 rounded-2xl px-5 py-3 text-center">
+              <p className="text-2xl font-black">{stats.livesImpacted}</p>
+              <p className="text-xs text-red-100 font-medium">Lives Impacted</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ═══════════════ STAT CARDS ═══════════════ */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          {
-            label: 'Total Donations',
-            value: data.totalDonations,
-            icon: <HeartIcon size={22} />,
-            gradient: 'from-blood-500 to-blood-700',
-            shadow: 'shadow-blood-500/30',
-            delay: 100,
-          },
-          {
-            label: 'Lives Impacted',
-            value: data.livesImpacted,
-            icon: <UsersIcon size={22} />,
-            gradient: 'from-emerald-500 to-emerald-700',
-            shadow: 'shadow-emerald-500/30',
-            delay: 200,
-          },
-          {
-            label: 'Next Eligible In',
-            value: '28',
-            suffix: 'days',
-            icon: <AlertIcon size={22} />,
-            gradient: 'from-amber-500 to-amber-700',
-            shadow: 'shadow-amber-500/30',
-            delay: 300,
-          },
-        ].map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-3xl shadow-xl shadow-blood-100/60 border-2 border-blood-100 p-6 hover:-translate-y-1 transition-all animate-fade-in-up"
-            style={{ animationDelay: `${stat.delay}ms` }}
-          >
-            <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg ${stat.shadow} mb-4`}>
-              {stat.icon}
-            </div>
-            <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
-            <p className="text-3xl md:text-4xl font-black text-gray-900">
-              {stat.value}
-              {stat.suffix && (
-                <span className="text-lg font-bold text-gray-400 ml-1">{stat.suffix}</span>
-              )}
-            </p>
+      {/* 2. ACTIVE QR CODE (If they just accepted) */}
+      {activeQr && (
+        <div className="bg-white rounded-3xl shadow-2xl border-2 border-blood-200 p-8 animate-fade-in-up text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blood-100 mb-4 animate-float">
+            <CheckCircleIcon size={32} className="text-blood-600" />
           </div>
-        ))}
-      </div>
+          <h2 className="text-2xl font-black text-gray-900 mb-2">You're a Hero! 🎉</h2>
+          <p className="text-sm text-gray-500 mb-6">Show this QR code to the blood bank officer to verify your donation.</p>
+          
+          <div className="bg-gray-50 rounded-2xl p-6 max-w-xs mx-auto mb-6 border border-gray-200">
+            <img src={`data:image/png;base64,${activeQr.qr_image_base64}`} alt="QR Code" className="w-full rounded-xl" />
+          </div>
+          
+          <button onClick={() => setActiveQr(null)} className="text-sm font-bold text-gray-500 hover:text-gray-800 underline">
+            I have reached the blood bank
+          </button>
+        </div>
+      )}
 
-      {/* ═══════════════ MILESTONE PROGRESS ═══════════════ */}
-      <div className="bg-white rounded-3xl shadow-xl shadow-blood-100/60 border-2 border-blood-100 p-6 md:p-7 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-        <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <SparkleIcon size={22} className="text-white" />
+      {/* 3. PENDING REQUESTS (Now with internal scrolling) */}
+      {pending.length > 0 && !activeQr && (
+        <div className="bg-white rounded-3xl shadow-xl border-2 border-blood-100 p-6 animate-fade-in-up animate-delay-100">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <AlertIcon size={20} className="text-amber-600 animate-pulse" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">Your Progress</h3>
-              <p className="text-xs text-gray-500">Next badge at {nextMilestone} donations</p>
+              <h3 className="font-bold text-gray-900">Urgent Requests Near You</h3>
+              <p className="text-xs text-gray-500">Patients need your blood type</p>
             </div>
           </div>
-          <span className="text-xs font-bold text-blood-600 bg-blood-50 px-3 py-1 rounded-full">
-            {data.totalDonations} / {nextMilestone}
-          </span>
-        </div>
 
-        <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-blood-500 to-blood-700 rounded-full transition-all duration-1000"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <p className="text-xs text-gray-500 mt-3">
-          {nextMilestone - data.totalDonations} more{' '}
-          {nextMilestone - data.totalDonations === 1 ? 'donation' : 'donations'} to unlock your next badge 🎯
-        </p>
-      </div>
-
-      {/* ═══════════════ BADGES ═══════════════ */}
-      <div className="bg-white rounded-3xl shadow-xl shadow-blood-100/60 border-2 border-blood-100 p-6 md:p-7 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <SparkleIcon size={22} className="text-white" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900">Badges Earned</h3>
-            <p className="text-xs text-gray-500">Achievements from your donation journey</p>
-          </div>
-        </div>
-
-        {data.badges?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {data.badges.map((b) => (
-              <span
-                key={b}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-800 rounded-2xl text-sm font-bold border-2 border-amber-200 shadow-sm"
-              >
-                <SparkleIcon size={14} className="text-amber-500" />
-                {b}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-2xl">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-50 mb-3">
-              <SparkleIcon size={26} className="text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-600 mb-1">No badges yet</p>
-            <p className="text-xs text-gray-400">Donate to earn your first badge!</p>
-          </div>
-        )}
-      </div>
-
-      {/* ═══════════════ RECENT ACTIVITY ═══════════════ */}
-      <div className="bg-white rounded-3xl shadow-xl shadow-blood-100/60 border-2 border-blood-100 p-6 md:p-7 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <ClipboardIcon size={22} className="text-white" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900">Recent Activity</h3>
-            <p className="text-xs text-gray-500">Your donation timeline</p>
-          </div>
-        </div>
-
-        <div className="relative">
-          <div className="absolute left-5 top-2 bottom-2 w-0.5 bg-gray-100 rounded-full" />
-
-          <div className="space-y-5">
-            {[
-              {
-                text: 'Donated at City Hospital Blood Bank',
-                date: '2 months ago',
-                status: 'Completed',
-                statusColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                iconBg: 'from-emerald-500 to-emerald-700',
-                icon: <CheckCircleIcon size={16} />,
-              },
-              {
-                text: 'Received emergency alert for B+ blood',
-                date: '3 months ago',
-                status: 'Responded',
-                statusColor: 'bg-blue-50 text-blue-700 border-blue-200',
-                iconBg: 'from-blue-500 to-blue-700',
-                icon: <AlertIcon size={16} />,
-              },
-              {
-                text: 'Registered on Jeevansh',
-                date: '6 months ago',
-                status: 'Welcome',
-                statusColor: 'bg-gray-50 text-gray-700 border-gray-200',
-                iconBg: 'from-gray-500 to-gray-700',
-                icon: <HeartIcon size={16} />,
-              },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-4">
-                <div
-                  className={`flex-shrink-0 relative z-10 w-10 h-10 rounded-full bg-gradient-to-br ${item.iconBg} flex items-center justify-center text-white shadow-md ring-4 ring-white`}
+          {/* Container with max height and scrollbar */}
+          <div className="space-y-3 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
+            {pending.map((req) => (
+              <div key={req.id} className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                <div>
+                  <p className="font-black text-gray-900">{req.blood_type} needed</p>
+                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                    <LocationIcon size={12} /> {req.hospital_name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAccept(req.id)}
+                  className="bg-blood-600 text-white text-sm font-bold px-5 py-2 rounded-xl hover:bg-blood-700 transition shadow-md shadow-blood-600/20"
                 >
-                  {item.icon}
-                </div>
-
-                <div className="flex-1 min-w-0 flex items-center justify-between gap-3 pt-1">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-900">{item.text}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{item.date}</p>
-                  </div>
-                  <span
-                    className={`flex-shrink-0 text-xs font-bold px-3 py-1 rounded-full border ${item.statusColor}`}
-                  >
-                    {item.status}
-                  </span>
-                </div>
+                  Accept
+                </button>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* 4. CERTIFICATES */}
+      <div className="bg-white rounded-3xl shadow-xl border-2 border-blood-100 p-6 animate-fade-in-up animate-delay-200">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <ShieldIcon size={20} className="text-emerald-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900">My Certificates</h3>
+            <p className="text-xs text-gray-500">Proof of your life-saving donations</p>
+          </div>
+        </div>
+
+        {certificates.length === 0 ? (
+          <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-2xl">
+            <p className="text-sm text-gray-500 font-medium">No certificates yet.</p>
+            <p className="text-xs text-gray-400 mt-1">Accept a request to earn your first one.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {certificates.map((cert) => (
+              // Changed <div> to <Link>
+              <Link to={`/donor/certificate/${cert.id}`} key={cert.id} className="flex items-center justify-between p-4 border border-emerald-100 bg-emerald-50 rounded-2xl hover:bg-emerald-100 transition cursor-pointer shadow-sm">
+                <div>
+                  <p className="font-bold text-emerald-900 text-sm">Certificate of Life</p>
+                  <p className="text-xs text-emerald-700 mt-1">Verified on {new Date(cert.verified_at).toLocaleDateString()}</p>
+                </div>
+                <span className="bg-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
+                  {cert.blood_type}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ═══════════════ CTA ═══════════════ */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blood-600 to-blood-700 p-6 md:p-7 text-white animate-fade-in-up" style={{ animationDelay: '700ms' }}>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-        </div>
-        <div className="relative flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
-              <SendIcon size={22} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">Ready to save another life?</h3>
-              <p className="text-red-100 text-sm">Your next eligible donation is in 28 days</p>
-            </div>
-          </div>
-          <a
-            href="tel:1800JEEVAN"
-            className="inline-flex items-center gap-2 bg-white text-blood-700 font-bold px-6 py-3 rounded-2xl hover:bg-red-50 transition-all shadow-lg hover:-translate-y-0.5"
-          >
-            View Nearby Requests
-            <ArrowRightIcon size={18} />
-          </a>
-        </div>
-      </div>
     </div>
   );
 }
