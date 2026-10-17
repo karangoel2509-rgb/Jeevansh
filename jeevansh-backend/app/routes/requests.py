@@ -16,7 +16,7 @@ async def create_request(payload: BloodRequestCreate, background_tasks: Backgrou
         patient_blood_type=payload.blood_type,
         latitude=payload.latitude,
         longitude=payload.longitude,
-        radius_km=15,
+        radius_km=50,
         limit=20,
     )
 

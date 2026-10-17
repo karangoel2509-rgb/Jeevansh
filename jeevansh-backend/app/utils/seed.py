@@ -9,8 +9,8 @@ from app.database import connect_db, close_db, get_db
 
 BLOOD_TYPES = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
 
-LAT_RANGE = (28.40, 28.88)
-LNG_RANGE = (76.84, 77.40)
+LAT_RANGE = (28.55, 28.75)
+LNG_RANGE = (77.10, 77.30)
 
 FIRST_NAMES = ["Rahul", "Priya", "Amit", "Sneha", "Vikram", "Anjali", "Rohit",
                "Neha", "Karan", "Pooja", "Arjun", "Divya", "Suresh", "Meera",
