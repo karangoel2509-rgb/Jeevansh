@@ -4,3 +4,7 @@ motor
 pymongo
 python-dotenv
 pydantic
+qrcode
+pillow
+PyJWT
+httpx
