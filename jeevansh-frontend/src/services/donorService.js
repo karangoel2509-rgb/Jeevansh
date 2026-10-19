@@ -3,21 +3,29 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 export async function registerDonor(data) {
-  return { id: `donor-${Date.now()}`, ...data, totalDonations: 0, livesImpacted: 0, badges: [], available: true };
+  const payload = {
+    name: data.name,
+    phone: data.phone,
+    blood_type: data.bloodType,
+    latitude: 28.6139, // Default to Delhi for demo
+    longitude: 77.2090,
+    city: data.location || "Delhi",
+    age: data.age ? parseInt(data.age) : null,
+    weight: data.weight ? parseFloat(data.weight) : null,
+    gender: data.gender || null,
+    last_donated_at: data.lastDonated ? new Date(data.lastDonated).toISOString() : null,
+  };
+  
+  const res = await axios.post(`${API_URL}/donors/register`, payload);
+  return res.data;
 }
 
 export async function loginDonor(phone) {
   try {
-    // Call the new smart demo login endpoint
     const res = await axios.get(`${API_URL}/donors/me/demo-login`);
     return res.data;
   } catch (e) {
-    console.error("Demo login failed", e);
-    // Fallback if backend is down
-    return { 
-      token: 'mock-token', 
-      donor: { id: '65f1a2b3c4d5e6f7a8b9c0d1', name: 'Rahul Sharma', blood_type: 'O-', phone: '+919876543210' } 
-    };
+    return { token: 'mock-token', donor: { id: '65f1a2b3c4d5e6f7a8b9c0d1', name: 'Rahul Sharma', blood_type: 'O-', phone: '+919876543210' } };
   }
 }
 

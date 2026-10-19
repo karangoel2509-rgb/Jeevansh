@@ -7,7 +7,7 @@ class BloodRequestCreate(BaseModel):
     blood_type: BloodType
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
-    patient_age: Optional[int] = None
+    patient_age: Optional[int] = Field(None, ge=0, le=120) 
     patient_gender: Optional[str] = None
     units: int = Field(1, ge=1, le=10)
     hospital_name: Optional[str] = None

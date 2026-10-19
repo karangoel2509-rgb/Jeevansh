@@ -160,6 +160,8 @@ export default function RequestForm() {
               <input
                 type="number"
                 placeholder="e.g. 45"
+                min="1"  
+                max="120"  
                 value={form.patientAge}
                 onChange={(e) => setForm({ ...form, patientAge: e.target.value })}
                 className="w-full px-5 py-4 text-base bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-blood-500/10 focus:border-blood-500 focus:bg-white outline-none transition-all placeholder:text-gray-400"

@@ -9,19 +9,33 @@ import toast from 'react-hot-toast';
 
 export default function DonorRegister() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', phone: '', bloodType: '', location: '' });
+  const [form, setForm] = useState({ 
+    name: '', 
+    phone: '', 
+    bloodType: '', 
+    location: '',
+    age: '',
+    weight: '',
+    gender: '',
+    lastDonated: ''
+  });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.bloodType) return toast.error('Please fill all required fields');
+    
+    // Optional but helpful frontend validation
+    if (form.age && (form.age < 18 || form.age > 65)) return toast.error('Age must be between 18 and 65');
+    if (form.weight && form.weight < 45) return toast.error('Weight must be at least 45 kg');
+
     setLoading(true);
     try {
       await registerDonor(form);
       toast.success('Registered! You will receive a WhatsApp confirmation.');
       navigate('/donor/login');
     } catch (err) {
-      toast.error('Registration failed. Please try again.');
+      toast.error(err.response?.data?.detail || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -35,10 +49,10 @@ export default function DonorRegister() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blood-100 via-blood-50 to-red-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-olive-50 to-blood-50/20 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -left-20 w-96 h-96 bg-blood-200/40 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 -right-20 w-96 h-96 bg-red-200/40 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-20 -left-20 w-96 h-96 bg-olive-200/40 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 -right-20 w-96 h-96 bg-blood-200/40 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
       </div>
 
       <div className="relative max-w-3xl mx-auto py-16 px-6">
@@ -46,7 +60,7 @@ export default function DonorRegister() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blood-500 to-blood-700 shadow-lg shadow-blood-600/30 mb-4 animate-float">
             <HeartIcon size={26} className="text-white" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-2 leading-tight">
+          <h1 className="text-2xl md:text-3xl font-black text-blood-900 mb-2 leading-tight">
             Become a <span className="text-blood-600">Donor</span>
           </h1>
           <p className="text-sm md:text-base text-gray-500 max-w-md mx-auto leading-relaxed">
@@ -54,15 +68,15 @@ export default function DonorRegister() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="relative bg-white rounded-3xl shadow-2xl shadow-blood-200/60 border-2 border-blood-100 p-8 md:p-10 animate-fade-in-up animate-delay-100">
-          <div className="absolute top-0 left-8 right-8 h-1 bg-gradient-to-r from-blood-500 via-blood-600 to-blood-700 rounded-full" />
+        <form onSubmit={handleSubmit} className="relative bg-white rounded-3xl shadow-2xl shadow-olive-900/5 border-2 border-olive-100 p-8 md:p-10 animate-fade-in-up animate-delay-100">
+          <div className="absolute top-0 left-8 right-8 h-1 bg-gradient-to-r from-olive-500 via-olive-600 to-olive-700 rounded-full" />
 
           {/* Eligibility Guidelines Section */}
-          <div className="bg-gray-50/50 rounded-2xl p-5 mb-8 border border-gray-100">
+          <div className="bg-cream-50 rounded-2xl p-5 mb-8 border border-olive-100">
             <div className="flex items-center gap-2 mb-4">
               <ShieldIcon size={20} className="text-blood-600" />
               <div>
-                <h3 className="font-bold text-gray-900">Basic Donor Eligibility Guidelines</h3>
+                <h3 className="font-bold text-blood-900">Basic Donor Eligibility Guidelines</h3>
                 <p className="text-xs text-gray-500">Please review before registering. Clinical screening is performed at the donation center.</p>
               </div>
             </div>
@@ -88,6 +102,34 @@ export default function DonorRegister() {
               <PhoneIcon size={18} className="text-blood-600" /> WhatsApp Number <span className="text-blood-600">*</span>
             </label>
             <input type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-5 py-4 text-base bg-gray-50 border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-blood-500/10 focus:border-blood-500 focus:bg-white outline-none transition-all placeholder:text-gray-400" />
+          </div>
+
+          {/* NEW FIELDS: Age, Weight, Gender, Last Donated */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-2">Age</label>
+              <input type="number" placeholder="e.g. 25" min="18" max="65" value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} className="w-full px-4 py-3 text-base bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-blood-500/10 focus:border-blood-500 focus:bg-white outline-none transition-all placeholder:text-gray-400" />
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-2">Weight (kg)</label>
+              <input type="number" placeholder="e.g. 65" min="45" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="w-full px-4 py-3 text-base bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-blood-500/10 focus:border-blood-500 focus:bg-white outline-none transition-all placeholder:text-gray-400" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-2">Gender</label>
+              <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} className="w-full px-4 py-3 text-base bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-blood-500/10 focus:border-blood-500 focus:bg-white outline-none transition-all">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-800 mb-2">Last Donated</label>
+              <input type="date" value={form.lastDonated} onChange={(e) => setForm({ ...form, lastDonated: e.target.value })} className="w-full px-4 py-3 text-base bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-blood-500/10 focus:border-blood-500 focus:bg-white outline-none transition-all text-gray-600" />
+            </div>
           </div>
 
           <div className="mb-6">

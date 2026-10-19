@@ -11,17 +11,14 @@ class DonorRegister(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
     city: Optional[str] = None
+    
+    # NEW ELIGIBILITY FIELDS
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    gender: Optional[str] = None
     last_donated_at: Optional[datetime] = None
 
     @field_validator("phone")
     @classmethod
     def clean_phone(cls, v: str) -> str:
         return v.replace(" ", "").replace("-", "")
-
-class DonorResponse(BaseModel):
-    id: str
-    name: str
-    phone: str
-    blood_type: str
-    distance_km: Optional[float] = None
-    total_donations: int = 0
