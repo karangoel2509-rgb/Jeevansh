@@ -7,10 +7,10 @@ import {
   PhoneIcon,
   ShieldIcon,
   CheckCircleIcon,
-  SparkleIcon,
   ArrowRightIcon,
   UsersIcon,
   AlertIcon,
+  ClipboardIcon, // Added ClipboardIcon
 } from '../components/common/Icons';
 import Logo from '../components/common/Logo';
 import toast from 'react-hot-toast';
@@ -64,7 +64,7 @@ export default function DonorLogin() {
           </h1>
 
           <p className="text-red-100 text-lg mb-10 leading-relaxed animate-fade-in-up animate-delay-200">
-            Every time you log in, you're one step closer to saving another life. Your donation history and badges are waiting.
+            Every time you log in, you're one step closer to saving another life. Your donation history and certificates are waiting.
           </p>
 
           {/* Benefits list */}
@@ -72,7 +72,7 @@ export default function DonorLogin() {
             {[
               { icon: <HeartIcon size={20} />, text: 'Track your donation journey' },
               { icon: <UsersIcon size={20} />, text: 'See how many lives you have impacted' },
-              { icon: <SparkleIcon size={20} />, text: 'Earn badges and unlock achievements' },
+              { icon: <ClipboardIcon size={20} />, text: 'Download and share your life-saving certificates' }, // Updated line
               { icon: <AlertIcon size={20} />, text: 'Receive alerts for nearby emergencies' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
