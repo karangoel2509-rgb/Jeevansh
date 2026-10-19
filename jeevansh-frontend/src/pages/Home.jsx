@@ -55,7 +55,7 @@ export default function Home() {
                   to="/request"
                   className="inline-flex items-center justify-center gap-3 bg-transparent border-2 border-olive-600 text-olive-700 font-bold px-8 py-4 rounded-2xl hover:bg-olive-50 transition-all text-lg"
                 >
-                  Find Blood {/* <--- TEXT CHANGED HERE */}
+                  Find Blood Now {/* <--- TEXT CHANGED HERE */}
                   <ArrowRightIcon size={20} />
                 </Link>
               </div>
