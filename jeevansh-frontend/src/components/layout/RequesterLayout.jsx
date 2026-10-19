@@ -1,11 +1,13 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Logo from '../common/Logo';
+import FeedbackModal from '../common/FeedbackModal'; // <-- Import Modal
 import { PhoneIcon, HeartIcon, UsersIcon, AlertIcon } from '../common/Icons';
 
 export default function RequesterLayout() {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false); // <-- State for modal
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 8);
@@ -29,33 +31,26 @@ export default function RequesterLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* ═══ Top gradient accent ═══ */}
-      {/* <div className="h-[3px] bg-gradient-to-r from-blood-500 via-blood-700 to-blood-900" /> */}
-
-      {/* ═══ Emergency ticker ═══ */}
+    <div className="min-h-screen bg-white flex flex-col relative">
+      
+      {/* Emergency ticker */}
       {/* <div className="bg-gray-900 text-white text-xs">
         <div className="max-w-7xl mx-auto px-6 py-2 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
             <span className="font-medium tracking-wide">24/7 Emergency Blood Helpline — Live Network</span>
           </div>
-          <a
-            href="tel:1800JEEVAN"
-            className="flex items-center gap-2 hover:text-blood-300 transition font-semibold"
-          >
+          <a href="tel:1800JEEVAN" className="flex items-center gap-2 hover:text-blood-300 transition font-semibold">
             <PhoneIcon size={12} />
             1800-JEEVAN
           </a>
         </div>
       </div> */}
 
-      {/* ═══ Main Header ═══ */}
+      {/* Main Header */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-white/95 backdrop-blur-xl shadow-lg shadow-gray-200/40 border-b border-gray-100'
-            : 'bg-white border-b border-transparent'
+        className={`sticky top-0 z-40 transition-all duration-300 ${
+          scrolled ? 'bg-white/95 backdrop-blur-xl shadow-lg shadow-gray-200/40 border-b border-gray-100' : 'bg-white border-b border-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -71,10 +66,7 @@ export default function RequesterLayout() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link
-              to="/donor/login"
-              className="hidden md:inline-block text-sm font-bold text-gray-600 hover:text-blood-600 transition-colors"
-            >
+            <Link to="/donor/login" className="hidden md:inline-block text-sm font-bold text-gray-600 hover:text-blood-600 transition-colors">
               Sign In
             </Link>
             <Link
@@ -92,69 +84,58 @@ export default function RequesterLayout() {
         <Outlet />
       </main>
 
-      {/* ═══ Footer ═══ */}
+      {/* FLOATING FEEDBACK BUTTON */}
+      <button
+        onClick={() => setIsFeedbackOpen(true)}
+        className="fixed bottom-6 right-6 z-40 bg-gray-900 text-white text-sm font-bold px-5 py-3.5 rounded-full shadow-2xl hover:bg-black hover:-translate-y-1 transition-all flex items-center gap-2 border-2 border-white/20"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        Feedback
+      </button>
+
+      {/* Feedback Modal Component */}
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+
+      {/* Footer */}
       <footer className="bg-gray-900 text-white mt-20">
         <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
             <Logo size={38} textColor="text-white" />
-            <p className="text-gray-400 text-sm mt-4 leading-relaxed">
-              Connecting donors to patients in seconds. Every drop counts.
-            </p>
+            <p className="text-gray-400 text-sm mt-4 leading-relaxed">Connecting donors to patients in seconds. Every drop counts.</p>
             <div className="flex items-center gap-2 mt-4 text-xs text-emerald-400">
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-              All systems operational
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" /> All systems operational
             </div>
           </div>
-
           <div>
             <h4 className="font-bold text-base mb-4 text-white">Quick Links</h4>
             <ul className="space-y-3 text-sm text-gray-400">
-              <li>
-                <Link to="/request" className="hover:text-white transition flex items-center gap-2">
-                  <HeartIcon size={14} />
-                  Find Blood
-                </Link>
-              </li>
-              <li>
-                <Link to="/donor/register" className="hover:text-white transition flex items-center gap-2">
-                  <UsersIcon size={14} />
-                  Become a Donor
-                </Link>
-              </li>
-              <li>
-                <Link to="/bank/login" className="hover:text-white transition flex items-center gap-2">
-                  <AlertIcon size={14} />
-                  Blood Bank Login
-                </Link>
-              </li>
+              <li><Link to="/request" className="hover:text-white transition flex items-center gap-2"><HeartIcon size={14} /> Find Blood</Link></li>
+              <li><Link to="/donor/register" className="hover:text-white transition flex items-center gap-2"><UsersIcon size={14} /> Become a Donor</Link></li>
+              <li><Link to="/bank/login" className="hover:text-white transition flex items-center gap-2"><AlertIcon size={14} /> Blood Bank Login</Link></li>
             </ul>
           </div>
-
           <div>
             <h4 className="font-bold text-base mb-4 text-white">Contact</h4>
             <ul className="space-y-3 text-sm text-gray-400">
               <li>help@jeevansh.org</li>
               <li>+91 98765 43210</li>
-              <li className="pt-2 text-xs text-gray-500">
-                Available 24/7 for emergencies
-              </li>
+              <li className="pt-2 text-xs text-gray-500">Available 24/7 for emergencies</li>
             </ul>
           </div>
-
           <div>
             <h4 className="font-bold text-base mb-4 text-white">Emergency Helpline</h4>
             <p className="text-3xl font-black text-blood-400 tracking-tight">1800-JEEVAN</p>
             <p className="text-xs text-gray-500 mt-2">Free • 24/7 • Pan-India</p>
           </div>
         </div>
-
         <div className="border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-3 text-sm text-gray-500">
             <p>© 2026 Jeevansh. Built for Viksit Bharat 2047.</p>
             <p className="flex items-center gap-4">
               <span className="hover:text-gray-300 cursor-pointer transition">Privacy</span>
-              <span className="hover:text-gray-300 cursor-pointer transition">Terms</span>
-              <span className="hover:text-gray-300 cursor-pointer transition">Support</span>
+              <span className="hover:text-gray-300 transition">Terms</span>
             </p>
           </div>
         </div>
