@@ -181,33 +181,6 @@ export default function BankLogin() {
               </button>
             </form>
 
-            {/* Demo credentials box */}
-            <div className="mt-8 p-5 bg-blood-50/40 border border-blood-100 rounded-2xl">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  Demo Credentials
-                </p>
-              </div>
-              <div className="space-y-2 text-xs font-mono text-gray-600">
-                <div className="flex items-center justify-between">
-                  <span>bank-1</span>
-                  <span className="text-gray-400">/</span>
-                  <span>city123</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>bank-2</span>
-                  <span className="text-gray-400">/</span>
-                  <span>redcross123</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>bank-3</span>
-                  <span className="text-gray-400">/</span>
-                  <span>govt123</span>
-                </div>
-              </div>
-            </div>
-
             {/* Security footer */}
             <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
               <span className="flex items-center gap-1.5">
