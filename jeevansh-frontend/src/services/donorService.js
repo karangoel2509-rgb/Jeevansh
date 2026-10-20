@@ -7,7 +7,7 @@ export async function registerDonor(data) {
     name: data.name,
     phone: data.phone,
     blood_type: data.bloodType,
-    latitude: 28.6139, // Default to Delhi for demo
+    latitude: 28.6139,
     longitude: 77.2090,
     city: data.location || "Delhi",
     age: data.age ? parseInt(data.age) : null,
@@ -15,7 +15,6 @@ export async function registerDonor(data) {
     gender: data.gender || null,
     last_donated_at: data.lastDonated ? new Date(data.lastDonated).toISOString() : null,
   };
-  
   const res = await axios.post(`${API_URL}/donors/register`, payload);
   return res.data;
 }
@@ -30,7 +29,8 @@ export async function loginDonor(phone) {
 }
 
 export async function getDonorDashboard(donorId) {
-  return { totalDonations: 5, livesImpacted: 15, badges: ['First Drop', 'Hero'], available: true };
+  // We will remove this hardcoded mock data too!
+  return { totalDonations: 5, livesImpacted: 15, available: true };
 }
 
 export async function getPendingRequests(donorId) {
@@ -40,6 +40,12 @@ export async function getPendingRequests(donorId) {
 
 export async function acceptRequest(donorId, requestId) {
   const res = await axios.post(`${API_URL}/donors/me/accept/${requestId}?donor_id=${donorId}`);
+  return res.data;
+}
+
+// NEW: Reject request function
+export async function rejectRequest(donorId, requestId) {
+  const res = await axios.post(`${API_URL}/donors/me/reject/${requestId}?donor_id=${donorId}`);
   return res.data;
 }
 

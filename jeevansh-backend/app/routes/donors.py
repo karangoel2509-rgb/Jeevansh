@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from datetime import datetime, timedelta, timezone # <-- Import timezone
+from datetime import datetime, timezone
 from bson import ObjectId
 from app.database import get_db
 from app.models.donor import DonorRegister
@@ -12,7 +12,6 @@ router = APIRouter(prefix="/api/donors", tags=["donors"])
 async def register_donor(payload: DonorRegister):
     db = get_db()
 
-    # 1. ENFORCE ELIGIBILITY CRITERIA
     if payload.age is not None and (payload.age < 18 or payload.age > 65):
         raise HTTPException(status_code=400, detail="Donor must be between 18 and 65 years old.")
     
@@ -20,55 +19,36 @@ async def register_donor(payload: DonorRegister):
         raise HTTPException(status_code=400, detail="Donor must weigh at least 45 kg.")
         
     if payload.last_donated_at is not None:
-        # FIX: Ensure both dates are timezone-aware before subtracting
         now = datetime.now(timezone.utc)
         last_donated = payload.last_donated_at
         if last_donated.tzinfo is None:
             last_donated = last_donated.replace(tzinfo=timezone.utc)
-            
         days_since = (now - last_donated).days
         if days_since < 90:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Donor must wait 90 days between donations. Please wait {90 - days_since} more days."
-            )
+            raise HTTPException(status_code=400, detail=f"Donor must wait 90 days between donations. Please wait {90 - days_since} more days.")
 
-    # 2. Check for duplicate phone
     existing = await db.donors.find_one({"phone": payload.phone})
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A donor with this phone number already exists.",
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="A donor with this phone number already exists.")
 
-    # 3. Save to Database
     donor_doc = {
         "name": payload.name,
         "phone": payload.phone,
         "blood_type": payload.blood_type,
-        "location": {
-            "type": "Point",
-            "coordinates": [payload.longitude, payload.latitude],
-        },
+        "location": {"type": "Point", "coordinates": [payload.longitude, payload.latitude]},
         "city": payload.city,
         "is_available": True,
         "total_donations": 0,
         "last_donated_at": payload.last_donated_at,
-        "created_at": datetime.now(timezone.utc), # Also updated this to be safe
+        "created_at": datetime.now(timezone.utc),
         "age": payload.age,
         "weight": payload.weight,
         "gender": payload.gender,
     }
 
     result = await db.donors.insert_one(donor_doc)
+    return {"success": True, "donor_id": str(result.inserted_id), "message": f"Welcome, {payload.name}!"}
 
-    return {
-        "success": True,
-        "donor_id": str(result.inserted_id),
-        "message": f"Welcome, {payload.name}! You'll receive WhatsApp alerts for nearby requests.",
-    }
-
-# ... KEEP THE REST OF THE FILE EXACTLY AS IT IS ...
 @router.get("/count")
 async def donor_count():
     db = get_db()
@@ -83,7 +63,13 @@ async def search_donors(blood_type: str, latitude: float, longitude: float, radi
 @router.get("/me/pending-requests")
 async def get_pending_requests(donor_id: str):
     db = get_db()
-    cursor = db.requests.find({"status": "searching", "matched_donor_ids": donor_id}).sort("created_at", -1)
+    # Only show searching requests where the donor is matched AND hasn't rejected it yet
+    cursor = db.requests.find({
+        "status": "searching", 
+        "matched_donor_ids": donor_id,
+        "rejected_by": {"$ne": donor_id} # Exclude if donor is in rejected_by array
+    }).sort("created_at", -1).limit(1)
+    
     requests = []
     async for doc in cursor:
         requests.append({
@@ -94,6 +80,20 @@ async def get_pending_requests(donor_id: str):
             "created_at": doc["created_at"]
         })
     return {"count": len(requests), "requests": requests}
+
+@router.post("/me/reject/{request_id}")
+async def reject_request(request_id: str, donor_id: str):
+    """Add the donor's ID to the request's rejected_by array."""
+    db = get_db()
+    try:
+        oid = ObjectId(request_id)
+        await db.requests.update_one(
+            {"_id": oid},
+            {"$addToSet": {"rejected_by": donor_id}}
+        )
+        return {"success": True, "message": "Request rejected"}
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid request ID")
 
 @router.post("/me/accept/{request_id}")
 async def donor_accepts_request(request_id: str, donor_id: str):

@@ -7,21 +7,37 @@ export async function loginBank(bankId, password) {
     bank_id: bankId,
     password: password,
   });
-  return res.data; // { success, token, bank: {id, name} }
+  return res.data;
 }
 
-export async function verifyDonation(token, bankId = null) {
-  const res = await axios.post(`${API_URL}/donations/verify`, {
+export async function scanDonationQR(token, bankId = null) {
+  const res = await axios.post(`${API_URL}/donations/scan`, {
     token: token,
     bank_id: bankId,
   });
-  return res.data; // { success, message, donor_name, blood_type, ... }
+  return res.data;
+}
+
+export async function approveDonation(requestId, token, bankId = null) {
+  const res = await axios.post(`${API_URL}/donations/approve`, {
+    request_id: requestId,
+    token: token,
+    bank_id: bankId,
+  });
+  return res.data;
+}
+
+export async function rejectDonation(requestId, token, bankId = null) {
+  const res = await axios.post(`${API_URL}/donations/reject`, {
+    request_id: requestId,
+    token: token,
+    bank_id: bankId,
+  });
+  return res.data;
 }
 
 export async function getDonationHistory(bankId) {
-  const url = bankId
-    ? `${API_URL}/donations/history?bank_id=${bankId}`
-    : `${API_URL}/donations/history`;
+  const url = bankId ? `${API_URL}/donations/history?bank_id=${bankId}` : `${API_URL}/donations/history`;
   const res = await axios.get(url);
   return res.data;
 }

@@ -9,7 +9,7 @@ import DonorLayout from './components/layout/DonorLayout';
 import BankLayout from './components/layout/BankLayout';
 
 import DonorCertificate from './pages/DonorCertificate';
-import VerifyScreen from './pages/VerifyScreen';
+// import VerifyScreen from './pages/VerifyScreen';
 import Home from './pages/Home';
 import RequestForm from './pages/RequestForm';
 import BanksScreen from './pages/BanksScreen'; // <-- NEW IMPORT
@@ -49,7 +49,7 @@ export default function App() {
               <Route path="/request/banks" element={<BanksScreen />} /> {/* <-- NEW ROUTE */}
               <Route path="/request/alerting" element={<AlertingScreen />} />
               <Route path="/request/status/:id" element={<StatusScreen />} />
-              <Route path="/verify/:token" element={<VerifyScreen />} />
+              {/* <Route path="/verify/:token" element={<VerifyScreen />} /> */}
               <Route path="/donor/register" element={<DonorRegister />} />
               <Route path="/donor/login" element={<DonorLogin />} />
               <Route path="/bank/login" element={<BankLogin />} />

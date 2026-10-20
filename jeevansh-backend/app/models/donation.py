@@ -8,9 +8,15 @@ class BankLoginRequest(BaseModel):
     password: str = Field(..., min_length=1)
 
 
-class DonationVerifyRequest(BaseModel):
+class DonationScanRequest(BaseModel):
     token: str = Field(..., min_length=10)
-    bank_id: Optional[str] = None  # Optional for demo
+    bank_id: Optional[str] = None
+
+
+class DonationActionRequest(BaseModel):
+    request_id: str
+    token: str
+    bank_id: Optional[str] = None
 
 
 class DonationResponse(BaseModel):
